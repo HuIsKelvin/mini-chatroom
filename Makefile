@@ -6,3 +6,6 @@ client_epoll: mytalk_client_epoll.cpp
 
 server: mytalk_server.cpp
 	g++ mytalk_server.cpp -o server.out
+
+server_epoll: mytalk_server_epoll.cpp
+	g++ mytalk_server_epoll.cpp -o server_epoll.out

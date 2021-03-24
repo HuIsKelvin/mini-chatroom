@@ -41,6 +41,9 @@ int main( int argc, char* argv[] )
     const char* ip = argv[1];
     int port = atoi( argv[2] );
 
+    /*
+     * construct the socket
+     */
     int ret = 0;
     struct sockaddr_in address;
     bzero( &address, sizeof( address ) );
@@ -57,6 +60,9 @@ int main( int argc, char* argv[] )
     ret = listen( listenfd, 5 );
     assert( ret != -1 );
 
+    /*
+     * init client data
+     */
     client_data* users = new client_data[FD_LIMIT];
     pollfd fds[USER_LIMIT+1];
     int user_counter = 0;
