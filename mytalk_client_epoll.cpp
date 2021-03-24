@@ -71,6 +71,9 @@ void event_handler_et(epoll_event *events, int active_event_num, int epollfd, in
     }
 }
 
+/* 
+ * main function
+ */
 int main( int argc, char* argv[] )
 {
     if( argc <= 2 )
@@ -125,49 +128,6 @@ int main( int argc, char* argv[] )
 
         event_handler_et(events, active_event_num, epollfd, sockfd, pipefd);
     }
-
-    /* 
-     * poll method
-     */
-    // pollfd fds[2];
-    // fds[0].fd = 0;
-    // fds[0].events = POLLIN;
-    // fds[0].revents = 0;
-    // fds[1].fd = sockfd;
-    // fds[1].events = POLLIN | POLLRDHUP;
-    // fds[1].revents = 0;
-    // char read_buf[BUFFER_SIZE];
-    // int pipefd[2];
-    // int ret = pipe( pipefd );
-    // assert( ret != -1 );
-
-    // while( 1 )
-    // {
-    //     ret = poll( fds, 2, -1 );
-    //     if( ret < 0 )
-    //     {
-    //         printf( "poll failure\n" );
-    //         break;
-    //     }
-
-    //     if( fds[1].revents & POLLRDHUP )
-    //     {
-    //         printf( "server close the connection\n" );
-    //         break;
-    //     }
-    //     else if( fds[1].revents & POLLIN )
-    //     {
-    //         memset( read_buf, '\0', BUFFER_SIZE );
-    //         recv( fds[1].fd, read_buf, BUFFER_SIZE-1, 0 );
-    //         printf( "%s\n", read_buf );
-    //     }
-
-    //     if( fds[0].revents & POLLIN )
-    //     {
-    //         ret = splice( 0, NULL, pipefd[1], NULL, 32768, SPLICE_F_MORE | SPLICE_F_MOVE );
-    //         ret = splice( pipefd[0], NULL, sockfd, NULL, 32768, SPLICE_F_MORE | SPLICE_F_MOVE );
-    //     }
-    // }
     
     close( sockfd );
     return 0;
