@@ -15,8 +15,8 @@
 class Task {
 public:
     Task() {};
-    Task(int epollfd, int sockfd, int listenfd, __uint32_t cur_event, std::map<int, client_data> *users, locker *user_mutex)
-    :sockfd(sockfd), listenfd(listenfd), cur_event(cur_event), users(users) {};
+    Task(int epollfd, int sockfd, int listenfd, __uint32_t cur_event, std::map<int, client_data> *users, locker *user_mutex) :
+            sockfd(sockfd), listenfd(listenfd), cur_event(cur_event), users(users) {};
     Task(const Task &t);
     ~Task() {};
     // void init();

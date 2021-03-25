@@ -13,7 +13,7 @@ class threadpool
 public:
     threadpool( int thread_number = 8, int max_requests = 10000 );
     ~threadpool();
-    bool append( T* request );
+    bool append( T* request );  // append request to the event list
 
 private:
     static void* worker( void* arg );
@@ -46,7 +46,7 @@ threadpool< T >::threadpool( int thread_number, int max_requests ) :
 
     for ( int i = 0; i < thread_number; ++i )
     {
-        printf( "create the %dth thread\n", i );
+        // printf( "create the %dth thread\n", i );
         if( pthread_create( m_threads + i, NULL, worker, this ) != 0 )
         {
             delete [] m_threads;

@@ -1,11 +1,11 @@
-client: mytalk_client.cpp
-	g++ mytalk_client.cpp -o client.out
+client: client.cpp
+	g++ client.cpp -o client.out
 
-client_epoll: mytalk_client_epoll.cpp
-	g++ mytalk_client_epoll.cpp -o client_epoll.out
+client_epoll: client_epoll.cpp
+	g++ client_epoll.cpp -o client_epoll.out
 
-server: mytalk_server.cpp
-	g++ mytalk_server.cpp -o server.out
+server: server.cpp
+	g++ server.cpp -o server.out
 
-server_epoll: mytalk_server_epoll.cpp
-	g++ mytalk_server_epoll.cpp -o server_epoll.out -lpthread
+server_epoll: server_epoll.cpp
+	g++ server_epoll.cpp -o epoll.out -lpthread

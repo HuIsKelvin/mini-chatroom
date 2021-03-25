@@ -24,6 +24,7 @@
 #define BUFFER_SIZE 64
 #define FD_LIMIT 65535
 #define MAX_EVENT_NUMBER 1024
+#define THREAD_NUM 7
 
 // struct client_data
 // {
@@ -63,12 +64,13 @@ int main( int argc, char* argv[] )
     // init thread poll
     threadpool<Task> *pool = NULL;
     try {
-        pool = new threadpool<Task>(7);
+        pool = new threadpool<Task>(THREAD_NUM);
     } catch(...) {
         return 1;
     }
+    // client data store
     std::map<int, client_data> *users = new std::map<int, client_data>();
-    // locker *user_mutex = new locker();
+    // mutex for accessing users
     locker user_mutex;
 
     // create epoll
@@ -79,7 +81,7 @@ int main( int argc, char* argv[] )
     addfd(epollfd, listenfd, EPOLLIN, true);
 
     printf("============================\n");
-    printf("    chat room is running!\n");
+    printf("  chat room is running!\n");
     printf("============================\n");
     while(true) {
         int active_event_num = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
@@ -110,7 +112,7 @@ int main( int argc, char* argv[] )
                 char welcome[] = "===============\nWelcome to the chatroom!\n===============";
                 send(connfd, welcome, strlen(welcome), 0);
 
-            } else {    // other event
+            } else {    // other event, append to the task list
                 pool->append(users_tasks + sockfd);
             }
         }
