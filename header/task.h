@@ -7,6 +7,7 @@
 #include <map>
 #include "dataStruct.h"
 #include "util.h"
+#include "locker.h"
 
 // #define USER_LIMIT 30
 // #define BUFFER_SIZE 64
@@ -42,8 +43,6 @@ Task::Task(const Task &t) {
 }
 
 void Task::process() {
-    printf("task begin to process. sockfd:%d\n", this->sockfd);
-
     if((sockfd == listenfd) && (cur_event & EPOLLIN)) { // a new client want to connect
         struct sockaddr_in client_address;
         socklen_t client_addr_length = sizeof(client_address);
@@ -62,15 +61,12 @@ void Task::process() {
             return;
         }
         
-        // printf("[Info] lock\n");
-        // user_mutex->lock();
         client_data cd;
         cd.address = client_address;
+        user_mutex->lock();
         users->insert(std::pair<int, client_data>(connfd, cd));
-        // user_mutex->unlock();
-        // printf("[Info] unlock\n");
-        // char *msg = "a new client connects!";
-        // log(LOG_INFO, msg);
+        user_mutex->unlock();
+
         printf("[Info] a new client connects! socket fd:%d\n", connfd);
         addfd(epollfd, connfd, (EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLERR), true);
         setnonblocking(connfd);
@@ -88,43 +84,41 @@ void Task::process() {
         }
         return;
     } else if(cur_event & EPOLLRDHUP) { // a client left
-        // user_mutex->lock();
+        user_mutex->lock();
         users->erase(sockfd);
-        // user_mutex->unlock();
+        user_mutex->unlock();
         close(sockfd);
-        // char *msg = "a client left.";
-        // log(LOG_INFO, msg);
-        printf("[Info] a new client left!\n");
+
+        printf("[Info] a new client left! current client(s) is %ld.\n", users->size());
 
     } else if(cur_event & EPOLLIN) {
-        // auto it_client_data = users->find(sockfd);
-        // int ret = recv(sockfd, it_client_data->second.buf, BUFFER_SIZE-1, 0);
-        printf("[Info] try to get data\n");
+
         char buf[BUFFER_SIZE];
         memset(buf, '\0', BUFFER_SIZE);
         int ret = recv(sockfd, buf, BUFFER_SIZE-1, 0);
-        printf("[Info] get %d bytes of client data %s from %d\n", ret, buf, sockfd);
+        buf[strlen(buf)-1] = '\0';  // get rid of the '\n'
+        printf("[Info] get %d bytes of client data \"%s\" from %d\n", ret, buf, sockfd);
         
         if(ret < 0) {
             if(errno != EAGAIN) {
-                // user_mutex->lock();
+                user_mutex->lock();
                 users->erase(sockfd);
-                // user_mutex->unlock();
+                user_mutex->unlock();
                 close(sockfd);
                 printf("[Info] something goes wrong. Remove a client. Current %ld client(s).\n", users->size());
             }
         } else if(ret == 0) {
             printf("[Warn] code should not come to here\n");
         } else {
-            // user_mutex->lock();
             // notify other active clients
+            user_mutex->lock();
             for(auto it = users->begin(); it != users->end(); ++it) {
                 int sockfd_cur = it->first;
                 if(sockfd_cur == sockfd) { continue; }
                 // ret = send(sockfd_cur, it_client_data->second.buf, BUFFER_SIZE-1, 0);
                 ret = send(sockfd_cur, buf, BUFFER_SIZE-1, 0);
             }
-            // user_mutex->unlock();
+            user_mutex->unlock();
         }
     }
 }

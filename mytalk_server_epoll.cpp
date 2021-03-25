@@ -58,27 +58,32 @@ int main( int argc, char* argv[] )
     ret = listen( listenfd, 5 );
     assert( ret != -1 );
 
-    // store user info
+    // tasks of users
     Task *users_tasks = new Task[FD_LIMIT];
-    // int user_counter = 0;
     // init thread poll
-    threadpool<Task> *pool = new threadpool<Task>(7);
+    threadpool<Task> *pool = NULL;
+    try {
+        pool = new threadpool<Task>(7);
+    } catch(...) {
+        return 1;
+    }
     std::map<int, client_data> *users = new std::map<int, client_data>();
     // locker *user_mutex = new locker();
     locker user_mutex;
 
     // create epoll
     epoll_event events[MAX_EVENT_NUMBER];
-    int epollfd = epoll_create(5);
+    int epollfd = epoll_create(FD_LIMIT);
     assert(epollfd != -1);
     addfd(epollfd, 0, EPOLLIN | EPOLLERR, true);
     addfd(epollfd, listenfd, EPOLLIN, true);
 
+    printf("============================\n");
+    printf("    chat room is running!\n");
+    printf("============================\n");
     while(true) {
         int active_event_num = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
         if(active_event_num < 0) {
-            // char *msg = "epoll failure!\n";
-            // log(LOG_ERROR, msg);
             printf("[Error] epoll failure!\n");
             break;
         }
@@ -87,18 +92,31 @@ int main( int argc, char* argv[] )
             int sockfd = events[event_idx].data.fd;
             __uint32_t cur_event = events[event_idx].events;
             users_tasks[sockfd] = Task(epollfd, sockfd, listenfd, cur_event, users, &user_mutex);
-            pool->append(&users_tasks[sockfd]);
 
-            printf("listenfd:%d,\tsockfd: %d,\tevent:%d\n", listenfd, sockfd, cur_event);
+            if(sockfd == listenfd && (cur_event&EPOLLIN)) { // new connection
+                struct sockaddr_in client_address;
+                socklen_t client_addr_length = sizeof(client_address);
+                int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addr_length);  // accept new socket
+                client_data cd;
+                cd.address = client_address;
 
-            // if(sockfd == listenfd && (cur_event & EPOLLIN)) {
-            //     pri
-            // }
+                user_mutex.lock();
+                users->insert(std::pair<int, client_data>(connfd, cd));
+                user_mutex.unlock();
+                printf("[Info] a new client connects! socket fd:%d\n", connfd);
+                addfd(epollfd, connfd, (EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLERR), true);
+                setnonblocking(connfd);
+
+                char welcome[] = "===============\nWelcome to the chatroom!\n===============";
+                send(connfd, welcome, strlen(welcome), 0);
+
+            } else {    // other event
+                pool->append(users_tasks + sockfd);
+            }
         }
     }
 
-    // delete user_mutex;
-    // delete [] users;
+    delete users;
     delete [] users_tasks;
     delete pool;
     close( listenfd );

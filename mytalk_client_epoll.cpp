@@ -16,6 +16,7 @@
 #define MAX_EVENT_NUMBER 1024
 
 char read_buf[BUFFER_SIZE];
+bool m_stop = false;
 
 /* 
 * set non blocking to fd
@@ -53,10 +54,14 @@ void event_handler_et(epoll_event *events, int active_event_num, int epollfd, in
             // from server
             if(cur_event & EPOLLRDHUP) {
                 printf("[Info] server close the connection.\n");
+                m_stop = true;
                 break;
             } else if(cur_event & EPOLLIN) {
                 memset(read_buf, '\0', BUFFER_SIZE);
                 recv(sockfd, read_buf, BUFFER_SIZE-1, 0);
+                if(read_buf[strlen(read_buf)-1] == '\n') {
+                    read_buf[strlen(read_buf)-1] = '\0';
+                }
                 printf("%s\n", read_buf);
             }
 
@@ -101,7 +106,7 @@ int main( int argc, char* argv[] )
         close( sockfd );
         return 1;
     } else {
-        printf("[Info] a new client connected to the server %s:%d!\n", server_ip, port);
+        printf("[Info] connected to the server %s:%d!\n", server_ip, port);
     }
 
     /* 
@@ -119,7 +124,7 @@ int main( int argc, char* argv[] )
     int ret = pipe(pipefd);
     assert(ret != -1);
 
-    while(true) {
+    while(!m_stop) {
         int active_event_num = epoll_wait(epollfd, events, MAX_EVENT_NUMBER, -1);
         if(active_event_num < 0) {
             printf("[Error] epoll failure!\n");
