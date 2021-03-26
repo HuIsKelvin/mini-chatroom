@@ -7,7 +7,7 @@
 
 /*
  * class sem
- * based on semaphore
+ * based on POSIX semaphore
  */
 class sem
 {

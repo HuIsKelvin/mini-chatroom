@@ -78,7 +78,7 @@ bool threadpool< T >::append( T* request )
     }
     m_workqueue.push_back( request );
     m_queuelocker.unlock();
-    m_queuestat.post();
+    m_queuestat.post();     // notify other threads that there are events to deal with
     return true;
 }
 

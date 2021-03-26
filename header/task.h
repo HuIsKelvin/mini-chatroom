@@ -9,9 +9,6 @@
 #include "util.h"
 #include "locker.h"
 
-// #define USER_LIMIT 30
-// #define BUFFER_SIZE 64
-
 class Task {
 public:
     Task() {};
@@ -19,9 +16,7 @@ public:
             sockfd(sockfd), listenfd(listenfd), cur_event(cur_event), users(users) {};
     Task(const Task &t);
     ~Task() {};
-    // void init();
     void process();
-    // void delete();
 
 private:
     int epollfd;
@@ -88,6 +83,7 @@ void Task::process() {
         users->erase(sockfd);
         user_mutex->unlock();
         close(sockfd);
+        removefd(epollfd, sockfd, (EPOLLIN | EPOLLOUT | EPOLLERR), true);   // remove sockfd from epollfd
 
         printf("[Info] a new client left! current client(s) is %ld.\n", users->size());
 
@@ -105,6 +101,7 @@ void Task::process() {
                 users->erase(sockfd);
                 user_mutex->unlock();
                 close(sockfd);
+                removefd(epollfd, sockfd, (EPOLLIN | EPOLLOUT | EPOLLERR), true);   // remove sockfd from epollfd
                 printf("[Info] something goes wrong. Remove a client. Current %ld client(s).\n", users->size());
             }
         } else if(ret == 0) {
