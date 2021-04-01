@@ -4,7 +4,7 @@
 
 ## 文件
 
-- client.cpp: 客户端程序，基于`poll` 系统调用。
+- client.cpp: 客户端程序，基于 `poll` 系统调用。
 - server.cpp: 服务端程序，基于线程池和 `poll` 系统调用。
 - client_epoll.cpp: 客户端程序，基于`epoll` 系统调用。
 - server_epoll.cpp: 服务端程序，基于线程池和 `epoll` 系统调用。
