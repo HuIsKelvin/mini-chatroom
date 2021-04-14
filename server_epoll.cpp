@@ -94,27 +94,29 @@ int main( int argc, char* argv[] )
             int sockfd = events[event_idx].data.fd;
             __uint32_t cur_event = events[event_idx].events;
             users_tasks[sockfd] = Task(epollfd, sockfd, listenfd, cur_event, users, &user_mutex);
+            
+            pool->append(users_tasks + sockfd);
 
-            if(sockfd == listenfd && (cur_event&EPOLLIN)) { // new connection
-                struct sockaddr_in client_address;
-                socklen_t client_addr_length = sizeof(client_address);
-                int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addr_length);  // accept new socket
-                client_data cd;
-                cd.address = client_address;
+            // if(sockfd == listenfd && (cur_event&EPOLLIN)) { // new connection
+            //     struct sockaddr_in client_address;
+            //     socklen_t client_addr_length = sizeof(client_address);
+            //     int connfd = accept(listenfd, (struct sockaddr*)&client_address, &client_addr_length);  // accept new socket
+            //     client_data cd;
+            //     cd.address = client_address;
 
-                user_mutex.lock();
-                users->insert(std::pair<int, client_data>(connfd, cd));
-                user_mutex.unlock();
-                printf("[Info] a new client connects! socket fd:%d\n", connfd);
-                addfd(epollfd, connfd, (EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLERR), true);
-                setnonblocking(connfd);
+            //     user_mutex.lock();
+            //     users->insert(std::pair<int, client_data>(connfd, cd));
+            //     user_mutex.unlock();
+            //     printf("[Info] a new client connects! socket fd:%d\n", connfd);
+            //     addfd(epollfd, connfd, (EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLERR), true);
+            //     setnonblocking(connfd);
 
-                char welcome[] = "===============\nWelcome to the chatroom!\n===============";
-                send(connfd, welcome, strlen(welcome), 0);
+            //     char welcome[] = "===============\nWelcome to the chatroom!\n===============";
+            //     send(connfd, welcome, strlen(welcome), 0);
 
-            } else {    // other event, append to the task list
-                pool->append(users_tasks + sockfd);
-            }
+            // } else {    // other event, append to the task list
+            //     pool->append(users_tasks + sockfd);
+            // }
         }
     }
 

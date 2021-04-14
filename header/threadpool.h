@@ -44,7 +44,7 @@ threadpool< T >::threadpool( int thread_number, int max_requests ) :
         throw std::exception();
     }
 
-    for ( int i = 0; i < thread_number; ++i )
+    for ( int i = 0; i < m_thread_number; ++i )
     {
         // printf( "create the %dth thread\n", i );
         if( pthread_create( m_threads + i, NULL, worker, this ) != 0 )
@@ -63,6 +63,9 @@ threadpool< T >::threadpool( int thread_number, int max_requests ) :
 template< typename T >
 threadpool< T >::~threadpool()
 {
+    // for( int i = 0; i < m_thread_number; ++i ) {
+    //     pthread_join(m_threads[i], NULL);
+    // }
     delete [] m_threads;
     m_stop = true;
 }
