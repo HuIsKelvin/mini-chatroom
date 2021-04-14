@@ -13,15 +13,19 @@ class Task {
 public:
     Task() {};
     Task(int epollfd, int sockfd, int listenfd, __uint32_t cur_event, std::map<int, client_data> *users, locker *user_mutex) :
-            sockfd(sockfd), listenfd(listenfd), cur_event(cur_event), users(users) {};
+            epollfd(epollfd), sockfd(sockfd), listenfd(listenfd), cur_event(cur_event), users(users), user_mutex(user_mutex) {};
     Task(const Task &t);
+    // Task operator=(const Task &rhs) {
+    //     printf("task operator =\n");
+    //     return Task(rhs);
+    // }
     ~Task() {};
     void process();
 
 private:
-    int epollfd;
-    int sockfd;
-    int listenfd;
+    int epollfd = -1;
+    int sockfd = -1;
+    int listenfd = -1;
     __uint32_t cur_event;
     // std::vector<int> *users;
     std::map<int, client_data> *users;
@@ -63,11 +67,15 @@ void Task::process() {
         user_mutex->unlock();
 
         printf("[Info] a new client connects! socket fd:%d\n", connfd);
+        // BUG - DETACH?
         addfd(epollfd, connfd, (EPOLLIN | EPOLLOUT | EPOLLRDHUP | EPOLLERR), true);
         setnonblocking(connfd);
 
         printf("num of user:");
         printf("%d\n", (int)this->users->size());
+
+        char welcome[] = "===============\nWelcome to the chatroom!\n===============";
+        send(connfd, welcome, strlen(welcome), 0);
 
     } else if(cur_event & EPOLLERR) {   // error
         printf("[Error] get an error from %d\n", sockfd);

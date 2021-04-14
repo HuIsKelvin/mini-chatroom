@@ -8,4 +8,4 @@ server: server.cpp
 	g++ server.cpp -o server.out
 
 server_epoll: server_epoll.cpp
-	g++ server_epoll.cpp -o epoll.out -lpthread
+	g++ server_epoll.cpp -o server_epoll.out -lpthread
